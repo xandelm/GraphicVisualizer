@@ -1,6 +1,7 @@
 from abc import ABC
-import random
 from PySide6 import QtCore, QtWidgets, QtGui
+import sys
+import random
 import xml.etree.ElementTree as ElementTree
 
 class Ponto:
@@ -171,20 +172,41 @@ if __name__ == "__main__":
     for poligono in poligonos:
         poligono.print()
 
+    # Limpa a estrutura antiga
+    dados.clear()
+
     # ---- Transformar pontos para Viewport ----
     pontos = transformar_pontos_viewport(window, viewport, pontos)
     for ponto in pontos:
+        ponto_elem = ElementTree.SubElement(dados, 'ponto')
+        ponto_elem.set("x", str(ponto.x))
+        ponto_elem.set("y", str(ponto.y))
         ponto.print()
 
     # ---- Transformar retas para viewport ----
     retas = [Reta(*transformar_pontos_viewport(window, viewport, [reta.a, reta.b])) for reta in retas]
     for reta in retas:
+        reta_elem = ElementTree.SubElement(dados, "reta")
+        for ponto in [reta.a, reta.b]:
+            ponto_elem = ElementTree.SubElement(reta_elem, "ponto")
+            ponto_elem.set("x", str(ponto.x))
+            ponto_elem.set("y", str(ponto.x))
         reta.print()
 
     # ---- Transformar poligonos para viewport ----
     poligonos = [Poligono(*transformar_pontos_viewport(window, viewport, poligono.pontos)) for poligono in poligonos]
     for poligono in poligonos:
+        poligono_elem = ElementTree.SubElement(dados, "poligono")
+        for ponto in poligono.pontos:
+            ponto_elem = ElementTree.SubElement(poligono_elem, "ponto")
+            ponto_elem.set("x", str(ponto.x))
+            ponto_elem.set("y", str(ponto.x))
         poligono.print()
+
+    # Salva o arquivo com a nova estrutura
+    xml = ElementTree.ElementTree(dados)
+    ElementTree.indent(xml, space="\t", level=0)
+    xml.write("docs/saida.xml", xml_declaration=True, encoding="utf-8")
 
     # ---- Gerar Viewport ----
     # app = QtWidgets.QApplication([])
@@ -192,3 +214,5 @@ if __name__ == "__main__":
     # widget = MyWidget()
     # widget.resize(800, 600)
     # widget.show()
+
+    # sys.exit(app.exec())
