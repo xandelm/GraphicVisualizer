@@ -120,9 +120,9 @@ if __name__ == "__main__":
     dados = ElementTree.parse('docs/entrada.xml').getroot()
 
     # ---- Window ----
-    wmin = Ponto(*dados.find("window/wmin").attrib.values())
-    wmax = Ponto(*dados.find("window/wmax").attrib.values())
-    window = Window(wmin, wmax)
+    w_min = Ponto(*dados.find("window/wmin").attrib.values())
+    w_max = Ponto(*dados.find("window/wmax").attrib.values())
+    window = Window(w_min, w_max)
     window.print()
 
     # ---- Viewport ----
