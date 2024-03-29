@@ -104,10 +104,17 @@ class Poligono:
     def print(self) -> None:
         print("---- Poligono ----")
         for ponto in self._pontos:
-            ponto.print();
+            ponto.print()
+
+def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
+    pontos_vp = []
+    for ponto in pontos:
+        x_vp = ((ponto.x - window.p_minimo.x) / window.comprimento()) * viewport.comprimento()
+        y_vp = (1 - ((ponto.y - window.p_minimo.y) / window.altura())) * viewport.altura()
+        pontos_vp.append(Ponto(x_vp, y_vp))
+    return pontos_vp
 
 class MyWidget(QtWidgets.QWidget):
-
     def __init__(self):
         super().__init__()
 
@@ -162,10 +169,26 @@ if __name__ == "__main__":
         for poligono in dados.findall("poligono")
     ]
     for poligono in poligonos:
-        poligono.print();
+        poligono.print()
 
+    # ---- Transformar pontos para Viewport ----
+    pontos = transformar_pontos_viewport(window, viewport, pontos)
+    for ponto in pontos:
+        ponto.print()
+
+    # ---- Transformar retas para viewport ----
+    retas = [Reta(*transformar_pontos_viewport(window, viewport, [reta.a, reta.b])) for reta in retas]
+    for reta in retas:
+        reta.print()
+
+    # ---- Transformar poligonos para viewport ----
+    poligonos = [Poligono(*transformar_pontos_viewport(window, viewport, poligono.pontos)) for poligono in poligonos]
+    for poligono in poligonos:
+        poligono.print()
+
+    # ---- Gerar Viewport ----
     # app = QtWidgets.QApplication([])
 
-        # widget = MyWidget()
-        # widget.resize(800, 600)
-        # widget.show()
+    # widget = MyWidget()
+    # widget.resize(800, 600)
+    # widget.show()
