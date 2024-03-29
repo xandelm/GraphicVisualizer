@@ -93,6 +93,8 @@ class Poligono:
     def __init__(self, *pontos: Ponto) -> None:
         if not all(isinstance(p, Ponto) for p in pontos):
             raise TypeError("As coordenadas devem ser um Ponto")
+        if len(pontos) <= 2:
+            raise ValueError("Quantidade de pontos do poligono deve ser maior que 2")
         self._pontos = list(pontos)
 
     @property
