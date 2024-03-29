@@ -9,38 +9,38 @@ class Ponto:
         self._y = float(y)
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self._x
 
     @property
-    def y(self):
+    def y(self) -> float:
         return self._y
 
-    def print(self):
+    def print(self) -> None:
         print("x: " + str(self._x), "y: " + str(self._y), sep=", ")
 
 class Retangulo(ABC):
-    def __init__(self, p_minimo: Ponto, p_maximo: Ponto):
+    def __init__(self, p_minimo: Ponto, p_maximo: Ponto) -> None:
         if not all(isinstance(p, Ponto) for p in (p_minimo, p_maximo)):
             raise TypeError("As coordenadas devem ser um Ponto")
         self._p_minimo = p_minimo
         self._p_maximo = p_maximo
 
     @property
-    def p_minimo(self):
+    def p_minimo(self) -> Ponto:
         return self._p_minimo
 
     @property
-    def p_maximo(self):
+    def p_maximo(self) -> Ponto:
         return self._p_maximo
 
-    def comprimento(self):
+    def comprimento(self) -> float:
         return self._p_maximo.x - self._p_minimo.x
 
-    def altura(self):
+    def altura(self) -> float:
         return self._p_maximo.y - self._p_minimo.y
 
-    def print(self):
+    def print(self) -> None:
         print("Ponto mínimo:", end=" ")
         self._p_minimo.print()
         print("Ponto máximo:", end=" ")
@@ -49,36 +49,36 @@ class Retangulo(ABC):
         print(self.comprimento(), self.altura(), sep="x")
 
 class Window(Retangulo):
-    def print(self):
+    def print(self) -> None:
         print("---- Window ----")
         super().print()
 
 class Viewport(Retangulo):
-    def print(self):
+    def print(self) -> None:
         print("---- Viewport ----")
         super().print()
 
 class Reta:
-    def __init__(self, a: Ponto, b: Ponto):
+    def __init__(self, a: Ponto, b: Ponto) -> None:
         if not all(isinstance(p, Ponto) for p in (a, b)):
             raise TypeError("As coordenadas devem ser um Ponto")
         self._a = a
         self._b = b
 
     @property
-    def a(self):
+    def a(self) -> Ponto:
         return self._a
 
     @property
-    def b(self):
+    def b(self) -> Ponto:
         return self._b
 
-    def tamanho(self):
+    def tamanho(self) -> float:
         dx = self._b.x - self._a.x
         dy = self._b.y - self._a.y
         return (dx**2 + dy**2)**0.5
 
-    def print(self):
+    def print(self) -> None:
         print("---- Reta ----")
         self._a.print()
         self._b.print()
