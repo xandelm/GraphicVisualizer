@@ -1,8 +1,9 @@
 from abc import ABC
-from PySide6 import QtCore, QtWidgets, QtGui
-import sys
-import random
+from PySide6.QtCore import Qt, QPointF
+from PySide6.QtGui import QPolygonF
+from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem
 import xml.etree.ElementTree as ElementTree
+import sys
 
 class Ponto:
     def __init__(self, x: float, y: float) -> None:
@@ -107,6 +108,35 @@ class Poligono:
         for ponto in self._pontos:
             ponto.print()
 
+class ViewportWindow(QGraphicsView):
+    def __init__(self, viewport, pontos, retas, poligonos):
+        super().__init__()
+        self.setWindowTitle("Viewport")
+        self.setBackgroundBrush(Qt.white)
+
+        # Criar a dimensão da viewport
+        self.setSceneRect(viewport.p_minimo.x, viewport.p_minimo.y, viewport.p_maximo.x, viewport.p_maximo.y)
+
+        # Criar uma cena gráfica
+        scene = QGraphicsScene()
+        self.setScene(scene)
+
+        # Adicionar pontos
+        for ponto in pontos:
+            ponto_vp = QGraphicsEllipseItem(ponto.x, ponto.y, 1, 1)
+            scene.addItem(ponto_vp)
+
+        # Adicionar retas
+        for reta in retas:
+            reta_vp = QGraphicsLineItem(reta.a.x, reta.a.y, reta.b.x, reta.b.y)
+            scene.addItem(reta_vp)
+
+        # Adicionar polígonos
+        for poligono in poligonos:
+            poligono_vp = QGraphicsPolygonItem()
+            poligono_vp.setPolygon(QPolygonF([QPointF(ponto.x, ponto.y) for ponto in poligono.pontos]))
+            scene.addItem(poligono_vp)
+
 def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
     pontos_vp = []
     for ponto in pontos:
@@ -114,27 +144,6 @@ def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list
         y_vp = (1 - ((ponto.y - window.p_minimo.y) / window.altura())) * viewport.altura()
         pontos_vp.append(Ponto(x_vp, y_vp))
     return pontos_vp
-
-class MyWidget(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
-
-        self.button = QtWidgets.QPushButton("Click me!")
-        self.text = QtWidgets.QLabel("Hello World",
-                                     alignment=QtCore.Qt.AlignCenter)
-
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
-
-        self.button.clicked.connect(self.magic)
-
-    @QtCore.Slot()
-    def magic(self):
-        self.text.setText(random.choice(self.hello))
-
 
 if __name__ == "__main__":
     dados = ElementTree.parse('docs/entrada.xml').getroot()
@@ -164,7 +173,7 @@ if __name__ == "__main__":
     for reta in retas:
         reta.print()
 
-    # ---- Poligonos ----
+    # ---- Polígonos ----
     poligonos = [
         Poligono(*(Ponto(*ponto.attrib.values()) for ponto in poligono))
         for poligono in dados.findall("poligono")
@@ -193,7 +202,7 @@ if __name__ == "__main__":
             ponto_elem.set("y", str(ponto.x))
         reta.print()
 
-    # ---- Transformar poligonos para viewport ----
+    # ---- Transformar polígonos para viewport ----
     poligonos = [Poligono(*transformar_pontos_viewport(window, viewport, poligono.pontos)) for poligono in poligonos]
     for poligono in poligonos:
         poligono_elem = ElementTree.SubElement(dados, "poligono")
@@ -209,10 +218,7 @@ if __name__ == "__main__":
     xml.write("docs/saida.xml", xml_declaration=True, encoding="utf-8")
 
     # ---- Gerar Viewport ----
-    # app = QtWidgets.QApplication([])
-
-    # widget = MyWidget()
-    # widget.resize(800, 600)
-    # widget.show()
-
-    # sys.exit(app.exec())
+    app = QApplication(sys.argv)
+    viewport_window = ViewportWindow(viewport, pontos, retas, poligonos)
+    viewport_window.show()
+    sys.exit(app.exec())
