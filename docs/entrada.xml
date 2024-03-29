@@ -6,7 +6,7 @@
 		<vpmin x="10" y="10"/>
 		<vpmax x="630" y="470"/>
 	</viewport>
-	
+
 	<window>
 		<wmin x="0.0" y="0.0"/>
 		<wmax x="10.0" y="10.0"/>
