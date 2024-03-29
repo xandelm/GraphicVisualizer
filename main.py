@@ -16,6 +16,9 @@ class Ponto:
     def y(self) -> float:
         return self._y
 
+    def __eq__(self, __value: object) -> bool:
+        return self.x == __value.x and self.y == __value.y
+
     def print(self) -> None:
         print("x: " + str(self._x), "y: " + str(self._y), sep=", ")
 
@@ -62,6 +65,8 @@ class Reta:
     def __init__(self, a: Ponto, b: Ponto) -> None:
         if not all(isinstance(p, Ponto) for p in (a, b)):
             raise TypeError("As coordenadas devem ser um Ponto")
+        if a == b:
+            raise ValueError("Pontos da reta não podem coincidir")
         self._a = a
         self._b = b
 
