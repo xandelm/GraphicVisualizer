@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     # ---- Retas ----
     retas = [
-        Reta(Ponto(*list(reta)[0].attrib.values()), Ponto(*list(reta)[1].attrib.values()))
+        Reta(*(Ponto(*ponto.attrib.values()) for ponto in reta))
         for reta in dados.findall("reta")
     ]
     for reta in retas:
