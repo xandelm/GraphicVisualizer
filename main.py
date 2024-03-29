@@ -85,14 +85,19 @@ class Reta:
         print("Tamanho: ", self.tamanho())
 
 class Poligono:
-    def __init__(self, *pontos: Ponto):
+    def __init__(self, *pontos: Ponto) -> None:
         if not all(isinstance(p, Ponto) for p in pontos):
             raise TypeError("As coordenadas devem ser um Ponto")
         self._pontos = list(pontos)
 
     @property
-    def pontos(self):
+    def pontos(self) -> list[Ponto]:
         return self._pontos
+
+    def print(self) -> None:
+        print("---- Poligono ----")
+        for ponto in self._pontos:
+            ponto.print();
 
 class MyWidget(QtWidgets.QWidget):
 
@@ -143,6 +148,14 @@ if __name__ == "__main__":
     ]
     for reta in retas:
         reta.print()
+
+    # ---- Poligonos ----
+    poligonos = [
+        Poligono(*(Ponto(*ponto.attrib.values()) for ponto in poligono))
+        for poligono in dados.findall("poligono")
+    ]
+    for poligono in poligonos:
+        poligono.print();
 
     # app = QtWidgets.QApplication([])
 
