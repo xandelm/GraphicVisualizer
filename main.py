@@ -1,7 +1,7 @@
 from abc import ABC
 from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QPolygonF
-from PySide6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem
+from PySide6.QtWidgets import QStyle, QGridLayout, QVBoxLayout, QWidget,QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem, QMainWindow, QPushButton, QDockWidget
 import xml.etree.ElementTree as ElementTree
 import sys
 
@@ -108,18 +108,18 @@ class Poligono:
         for ponto in self._pontos:
             ponto.print()
 
-class ViewportWindow(QGraphicsView):
+class ViewportWindow(QWidget):
     def __init__(self, viewport, pontos, retas, poligonos):
         super().__init__()
-        self.setWindowTitle("Viewport")
-        self.setBackgroundBrush(Qt.white)
-
-        # Criar a dimensão da viewport
-        self.setSceneRect(viewport.p_minimo.x, viewport.p_minimo.y, viewport.p_maximo.x, viewport.p_maximo.y)
-
-        # Criar uma cena gráfica
+        layout = QVBoxLayout()
+        self.view = QGraphicsView()
+        self.view.setSceneRect(viewport.p_minimo.x, viewport.p_minimo.y, viewport.p_maximo.x, viewport.p_maximo.y)
         scene = QGraphicsScene()
-        self.setScene(scene)
+        self.view.setScene(scene)
+
+        layout.addWidget(self.view)
+
+        self.setLayout(layout)
 
         # Adicionar pontos
         for ponto in pontos:
@@ -137,6 +137,60 @@ class ViewportWindow(QGraphicsView):
             poligono_vp.setPolygon(QPolygonF([QPointF(ponto.x, ponto.y) for ponto in poligono.pontos]))
             scene.addItem(poligono_vp)
 
+class MainWindow(QMainWindow):
+    def __init__(self, viewport: ViewportWindow):
+        super().__init__()
+        self.setWindowTitle("MainWindow")
+        self.viewport = viewport
+
+        dock_widget = QDockWidget("Controls", self)
+        dock_widget.setMaximumHeight(300)
+        
+        dock_widget.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        
+        dock_contents = QWidget()
+        dock_layout = QGridLayout()
+
+        style = self.style()
+        up_button = QPushButton()
+        up_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowUp))
+        down_button = QPushButton()
+        down_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowDown))
+        left_button = QPushButton()
+        left_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowLeft))
+        right_button = QPushButton()
+        right_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_ArrowRight))
+        rotate_left_button = QPushButton()
+        rotate_right_button = QPushButton()
+        rotate_left_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
+        rotate_right_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
+
+        zoom_in_button = QPushButton("+")
+        zoom_out_button = QPushButton("-")
+
+        dock_layout.addWidget(up_button, 0, 1)
+        dock_layout.addWidget(left_button, 1, 0)
+        dock_layout.addWidget(right_button, 1, 2)
+        dock_layout.addWidget(down_button, 2, 1)
+        dock_layout.addWidget(rotate_left_button, 3, 0)
+        dock_layout.addWidget(rotate_right_button, 3, 2)
+        dock_layout.addWidget(zoom_in_button, 5, 0)
+        dock_layout.addWidget(zoom_out_button, 5, 2)
+
+
+
+        dock_contents.setLayout(dock_layout)
+        dock_widget.setWidget(dock_contents)
+
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock_widget)
+
+        self.setCentralWidget(self.viewport)
+        menu_bar = self.menuBar()
+        insert_menu = menu_bar.addMenu("Inserir")
+        insert_menu.addAction("Ponto")
+        insert_menu.addAction("Reta")
+        insert_menu.addAction("Poligono")
+        export_menu = menu_bar.addMenu("Exportar")
 def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
     pontos_vp = []
     for ponto in pontos:
@@ -220,5 +274,7 @@ if __name__ == "__main__":
     # ---- Gerar Viewport ----
     app = QApplication(sys.argv)
     viewport_window = ViewportWindow(viewport, pontos, retas, poligonos)
-    viewport_window.show()
+    window = MainWindow(viewport_window)
+
+    window.show()
     sys.exit(app.exec())
