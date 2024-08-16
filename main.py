@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QPolygonF
 from PySide6.QtWidgets import QStyle, QGridLayout, QVBoxLayout, QWidget,QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem, QMainWindow, QPushButton, QDockWidget
 import xml.etree.ElementTree as ElementTree
-import sys
+import sys, math
 
 class Ponto:
     def __init__(self, x: float, y: float) -> None:
@@ -31,6 +31,27 @@ class Ponto:
 
     def print(self) -> None:
         print("x: " + str(self._x), "y: " + str(self._y), sep=", ")
+    
+    def rotate(self, angle_degrees: float, center: 'Ponto' = None) -> None:
+        angle_radians = math.radians(angle_degrees)
+        
+        if center is None:
+            center = Ponto(0, 0)
+
+
+        # Translate point back to origin
+        translated_x = self._x - center.x
+        translated_y = self._y - center.y
+
+        # Apply rotation matrix
+        x_new = translated_x * math.cos(angle_radians) - translated_y * math.sin(angle_radians)
+        y_new = translated_x * math.sin(angle_radians) + translated_y * math.cos(angle_radians)
+
+        # Translate point back
+        self._x = x_new + center.x
+        self._y = y_new + center.y
+
+
 
 class Retangulo(ABC):
     def __init__(self, p_minimo: Ponto, p_maximo: Ponto) -> None:
@@ -187,6 +208,30 @@ class ViewportWindow(QWidget):
         self.viewport.p_minimo.y -= delta_y
         self.viewport.p_maximo.y -= delta_y
         self.update_scene()
+        
+    def rotate_objects(self, angle):
+        center = Ponto(
+            (self.viewport.p_minimo.x + self.viewport.p_maximo.x) / 2,
+            (self.viewport.p_minimo.y + self.viewport.p_maximo.y) / 2,
+        )
+        
+
+        # Rotate all points
+        for ponto in self.pontos:
+            ponto.rotate(angle, center)
+
+        # Rotate all lines
+        for reta in self.retas:
+            reta.a.rotate(angle, center)
+            reta.b.rotate(angle, center)
+
+        # Rotate all polygons
+        for poligono in self.poligonos:
+            for ponto in poligono.pontos:
+                ponto.rotate(angle, center)
+
+        # Update the scene with the new coordinates
+        self.update_scene()
 
 class MainWindow(QMainWindow):
     def __init__(self, viewport: ViewportWindow):
@@ -247,6 +292,8 @@ class MainWindow(QMainWindow):
         left_button.clicked.connect(self.viewport.move_left)
         up_button.clicked.connect(self.viewport.move_up)
         down_button.clicked.connect(self.viewport.move_down)
+        rotate_left_button.clicked.connect(lambda: self.viewport.rotate_objects(-10))
+        rotate_right_button.clicked.connect(lambda: self.viewport.rotate_objects(10))
 
 def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
     pontos_vp = []
