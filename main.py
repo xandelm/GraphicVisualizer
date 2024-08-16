@@ -1,7 +1,7 @@
 from abc import ABC
 from PySide6.QtCore import Qt, QPointF
-from PySide6.QtGui import QPolygonF
-from PySide6.QtWidgets import QStyle, QGridLayout, QVBoxLayout, QWidget,QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem, QMainWindow, QPushButton, QDockWidget
+from PySide6.QtGui import QPolygonF, QTransform
+from PySide6.QtWidgets import  QStyle, QGridLayout, QVBoxLayout, QWidget,QApplication, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsPolygonItem, QMainWindow, QPushButton, QDockWidget
 import xml.etree.ElementTree as ElementTree
 import sys, math
 
@@ -50,6 +50,10 @@ class Ponto:
         # Translate point back
         self._x = x_new + center.x
         self._y = y_new + center.y
+
+    def zoom(self, factor: float, center: 'Ponto') -> None:
+        self._x = center.x + (self._x - center.x) * factor
+        self._y = center.y + (self._y - center.y) * factor
 
 
 
@@ -153,6 +157,9 @@ class ViewportWindow(QWidget):
         layout.addWidget(self.view)
         self.setLayout(layout)
 
+        self.original_viewport_size = (viewport.comprimento(), viewport.altura())
+        self.scale_factor = 1.0
+
         self.update_scene()
 
     def update_scene(self):
@@ -181,6 +188,7 @@ class ViewportWindow(QWidget):
             poligono_vp = QGraphicsPolygonItem()
             poligono_vp.setPolygon(QPolygonF([QPointF(ponto.x, ponto.y) for ponto in poligono.pontos]))
             self.scene.addItem(poligono_vp)
+
 
     def move_left(self):
         # Move the viewport to the left by shifting the scene rect
@@ -233,6 +241,51 @@ class ViewportWindow(QWidget):
         # Update the scene with the new coordinates
         self.update_scene()
 
+    def zoom_in(self):
+        self.zoom(1.1)  # Ampliar em 10%
+
+    def zoom_out(self):
+        self.zoom(0.9)  # Reduzir em 10%
+
+    def zoom(self, factor: float):
+        # Atualiza o fator de escala
+        self.scale_factor *= factor
+        center = Ponto(
+            (self.viewport.p_minimo.x + self.viewport.p_maximo.x) / 2,
+            (self.viewport.p_minimo.y + self.viewport.p_maximo.y) / 2)
+        
+        for ponto in self.pontos:
+            ponto.zoom(factor, center)
+
+        self.apply_zoom(factor)
+
+    def apply_zoom(self, factor: float):
+                # Calcular o centro atual
+        center_x = (self.viewport.p_minimo.x + self.viewport.p_maximo.x) / 2
+        center_y = (self.viewport.p_minimo.y + self.viewport.p_maximo.y) / 2
+        center = Ponto(center_x, center_y)
+
+        # Ajustar as dimensões do viewport
+        width = self.viewport.comprimento() * factor
+        height = self.viewport.altura() * factor
+
+        # Atualizar as coordenadas do viewport
+        self.viewport.p_minimo.x = center_x - width / 2
+        self.viewport.p_minimo.y = center_y - height / 2
+        self.viewport.p_maximo.x = center_x + width / 2
+        self.viewport.p_maximo.y = center_y + height / 2
+
+        for ponto in self.pontos:
+            ponto.zoom(factor, center)
+        for reta in self.retas:
+            reta.a.zoom(factor, center)
+            reta.b.zoom(factor, center)
+        for poligono in self.poligonos:
+            for ponto in poligono.pontos:
+                ponto.zoom(factor, center)
+
+        self.update_scene()
+    
 class MainWindow(QMainWindow):
     def __init__(self, viewport: ViewportWindow):
         super().__init__()
@@ -294,6 +347,8 @@ class MainWindow(QMainWindow):
         down_button.clicked.connect(self.viewport.move_down)
         rotate_left_button.clicked.connect(lambda: self.viewport.rotate_objects(-10))
         rotate_right_button.clicked.connect(lambda: self.viewport.rotate_objects(10))
+        zoom_in_button.clicked.connect(self.viewport.zoom_in)
+        zoom_out_button.clicked.connect(self.viewport.zoom_out)
 
 def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
     pontos_vp = []
