@@ -2,7 +2,7 @@ from widgets.point_dialog import PointDialog
 from widgets.line_dialog import LineDialog
 from widgets.viewportwindow import ViewportWindow
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QDialog, QStyle, QGridLayout, QWidget, QMainWindow, QPushButton, QDockWidget
 
 class MainWindow(QMainWindow):
@@ -68,12 +68,41 @@ class MainWindow(QMainWindow):
         #TODO: Implementar método para abrir o diálogo de polígonos
         #insert_poligon_action.triggered.connect(self.open_poligono_dialog)
 
-        right_button.clicked.connect(self.viewport.move_right)
-        left_button.clicked.connect(self.viewport.move_left)
-        up_button.clicked.connect(self.viewport.move_up)
-        down_button.clicked.connect(self.viewport.move_down)
+        #these next lines are used to implement a click and hold functionality to the movement buttons
+        #the timer is used to make the viewport move
+        self.right_timer = QTimer(self)
+        self.left_timer = QTimer(self)
+        self.up_timer = QTimer(self)
+        self.down_timer = QTimer(self)
+
+        #the interval is the time between each movement
+        self.right_timer.setInterval(50)
+        self.left_timer.setInterval(50)
+        self.up_timer.setInterval(50)
+        self.down_timer.setInterval(50)
+
+        #the viewport is moved when the timer times out
+        self.right_timer.timeout.connect(self.viewport.move_right)
+        self.left_timer.timeout.connect(self.viewport.move_left)
+        self.up_timer.timeout.connect(self.viewport.move_up)
+        self.down_timer.timeout.connect(self.viewport.move_down)
+
+        #the viewport stops moving when the button is released
+        right_button.pressed.connect(self.right_timer.start)
+        right_button.released.connect(self.right_timer.stop)
+
+        left_button.pressed.connect(self.left_timer.start)
+        left_button.released.connect(self.left_timer.stop)
+
+        up_button.pressed.connect(self.up_timer.start)
+        up_button.released.connect(self.up_timer.stop)
+
+        down_button.pressed.connect(self.down_timer.start)
+        down_button.released.connect(self.down_timer.stop)
+
         rotate_left_button.clicked.connect(lambda: self.viewport.rotate_objects(-10))
         rotate_right_button.clicked.connect(lambda: self.viewport.rotate_objects(10))
+
         zoom_in_button.clicked.connect(self.viewport.zoom_in)
         zoom_out_button.clicked.connect(self.viewport.zoom_out)
 
