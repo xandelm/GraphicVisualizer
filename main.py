@@ -164,28 +164,28 @@ class ViewportWindow(QWidget):
     def move_left(self):
         # Move the viewport to the left by shifting the scene rect
         delta_x = 10  # Adjust the amount to move left by
-        self.viewport.p_minimo.x -= delta_x
-        self.viewport.p_maximo.x -= delta_x
+        self.viewport.p_minimo.x += delta_x
+        self.viewport.p_maximo.x += delta_x
 
         # Update the scene to reflect the changes
         self.update_scene()
 
     def move_right(self):
         delta_x = 10
-        self.viewport.p_minimo.x += delta_x
-        self.viewport.p_maximo.x += delta_x
+        self.viewport.p_minimo.x -= delta_x
+        self.viewport.p_maximo.x -= delta_x
         self.update_scene()
 
     def move_up(self):
         delta_y = 10
-        self.viewport.p_minimo.y -= delta_y
-        self.viewport.p_maximo.y -= delta_y
+        self.viewport.p_minimo.y += delta_y
+        self.viewport.p_maximo.y += delta_y
         self.update_scene()
 
     def move_down(self):
         delta_y = 10
-        self.viewport.p_minimo.y += delta_y
-        self.viewport.p_maximo.y += delta_y
+        self.viewport.p_minimo.y -= delta_y
+        self.viewport.p_maximo.y -= delta_y
         self.update_scene()
 
 class MainWindow(QMainWindow):
