@@ -14,9 +14,17 @@ class Ponto:
     def x(self) -> float:
         return self._x
 
+    @x.setter
+    def x(self, value: float) -> None:
+        self._x = value
+
     @property
     def y(self) -> float:
         return self._y
+    
+    @y.setter
+    def y(self, value: float) -> None:
+        self._y = value
 
     def __eq__(self, __value: object) -> bool:
         return self.x == __value.x and self.y == __value.y
@@ -111,31 +119,74 @@ class Poligono:
 class ViewportWindow(QWidget):
     def __init__(self, viewport, pontos, retas, poligonos):
         super().__init__()
+        self.viewport = viewport
+        self.pontos = pontos
+        self.retas = retas
+        self.poligonos = poligonos
+
         layout = QVBoxLayout()
         self.view = QGraphicsView()
-        self.view.setSceneRect(viewport.p_minimo.x, viewport.p_minimo.y, viewport.p_maximo.x, viewport.p_maximo.y)
-        scene = QGraphicsScene()
-        self.view.setScene(scene)
+        self.scene = QGraphicsScene()
+        self.view.setScene(self.scene)
 
         layout.addWidget(self.view)
-
         self.setLayout(layout)
 
+        self.update_scene()
+
+    def update_scene(self):
+        self.scene.clear()
+
+        # Set the scene rect according to the viewport dimensions
+        self.view.setSceneRect(
+            self.viewport.p_minimo.x, 
+            self.viewport.p_minimo.y, 
+            self.viewport.comprimento(), 
+            self.viewport.altura()
+        )
+
         # Adicionar pontos
-        for ponto in pontos:
+        for ponto in self.pontos:
             ponto_vp = QGraphicsEllipseItem(ponto.x, ponto.y, 1, 1)
-            scene.addItem(ponto_vp)
+            self.scene.addItem(ponto_vp)
 
         # Adicionar retas
-        for reta in retas:
+        for reta in self.retas:
             reta_vp = QGraphicsLineItem(reta.a.x, reta.a.y, reta.b.x, reta.b.y)
-            scene.addItem(reta_vp)
+            self.scene.addItem(reta_vp)
 
         # Adicionar polígonos
-        for poligono in poligonos:
+        for poligono in self.poligonos:
             poligono_vp = QGraphicsPolygonItem()
             poligono_vp.setPolygon(QPolygonF([QPointF(ponto.x, ponto.y) for ponto in poligono.pontos]))
-            scene.addItem(poligono_vp)
+            self.scene.addItem(poligono_vp)
+
+    def move_left(self):
+        # Move the viewport to the left by shifting the scene rect
+        delta_x = 10  # Adjust the amount to move left by
+        self.viewport.p_minimo.x -= delta_x
+        self.viewport.p_maximo.x -= delta_x
+
+        # Update the scene to reflect the changes
+        self.update_scene()
+
+    def move_right(self):
+        delta_x = 10
+        self.viewport.p_minimo.x += delta_x
+        self.viewport.p_maximo.x += delta_x
+        self.update_scene()
+
+    def move_up(self):
+        delta_y = 10
+        self.viewport.p_minimo.y -= delta_y
+        self.viewport.p_maximo.y -= delta_y
+        self.update_scene()
+
+    def move_down(self):
+        delta_y = 10
+        self.viewport.p_minimo.y += delta_y
+        self.viewport.p_maximo.y += delta_y
+        self.update_scene()
 
 class MainWindow(QMainWindow):
     def __init__(self, viewport: ViewportWindow):
@@ -191,6 +242,12 @@ class MainWindow(QMainWindow):
         insert_menu.addAction("Reta")
         insert_menu.addAction("Poligono")
         export_menu = menu_bar.addMenu("Exportar")
+
+        right_button.clicked.connect(self.viewport.move_right)
+        left_button.clicked.connect(self.viewport.move_left)
+        up_button.clicked.connect(self.viewport.move_up)
+        down_button.clicked.connect(self.viewport.move_down)
+
 def transformar_pontos_viewport(window: Window, viewport: Viewport, pontos: list[Ponto]) -> list[Ponto]:
     pontos_vp = []
     for ponto in pontos:
