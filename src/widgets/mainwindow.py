@@ -1,5 +1,6 @@
 from widgets.point_dialog import PointDialog
 from widgets.line_dialog import LineDialog
+from widgets.poligono_dialog import PolygonDialog
 from widgets.viewportwindow import ViewportWindow
 
 from PySide6.QtCore import Qt, QTimer
@@ -13,9 +14,9 @@ class MainWindow(QMainWindow):
 
         dock_widget = QDockWidget("Controls", self)
         dock_widget.setMaximumHeight(300)
-        
+
         dock_widget.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        
+
         dock_contents = QWidget()
         dock_layout = QGridLayout()
 
@@ -45,8 +46,6 @@ class MainWindow(QMainWindow):
         dock_layout.addWidget(zoom_in_button, 5, 0)
         dock_layout.addWidget(zoom_out_button, 5, 2)
 
-
-
         dock_contents.setLayout(dock_layout)
         dock_widget.setWidget(dock_contents)
 
@@ -60,13 +59,12 @@ class MainWindow(QMainWindow):
         insert_point_action = insert_menu.addAction("Ponto")
         insert_line_action = insert_menu.addAction("Reta")
         insert_poligon_action = insert_menu.addAction("Poligono")
-        
+
         export_menu = menu_bar.addMenu("Exportar")
 
         insert_point_action.triggered.connect(self.open_point_dialog)
         insert_line_action.triggered.connect(self.open_line_dialog)
-        #TODO: Implementar método para abrir o diálogo de polígonos
-        #insert_poligon_action.triggered.connect(self.open_poligono_dialog)
+        insert_poligon_action.triggered.connect(self.open_poligono_dialog)
 
         #these next lines are used to implement a click and hold functionality to the movement buttons
         #the timer is used to make the viewport move
@@ -120,5 +118,9 @@ class MainWindow(QMainWindow):
             self.viewport.retas.append(line)
             self.viewport.update_scene()
 
-    #TODO: Implementar método para abrir o diálogo de polígonos
-    #def open_poligono_dialog(self):
+    def open_poligono_dialog(self):
+        dialog = PolygonDialog()
+        if dialog.exec() == QDialog.Accepted:
+            polygon = dialog.get_polygon()
+            self.viewport.poligonos.append(polygon)
+            self.viewport.update_scene()
