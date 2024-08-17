@@ -1,3 +1,4 @@
+from xml.etree import ElementTree
 from widgets.point_dialog import PointDialog
 from widgets.line_dialog import LineDialog
 from widgets.poligono_dialog import PolygonDialog
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow):
         insert_poligon_action = insert_menu.addAction("Poligono")
 
         export_menu = menu_bar.addMenu("Exportar")
+        export_menu.triggered.connect(self.export)
 
         insert_point_action.triggered.connect(self.open_point_dialog)
         insert_line_action.triggered.connect(self.open_line_dialog)
@@ -124,3 +126,38 @@ class MainWindow(QMainWindow):
             polygon = dialog.get_polygon()
             self.viewport.poligonos.append(polygon)
             self.viewport.update_scene()
+
+    def export(self):
+        dados = ElementTree.parse('docs/entrada.xml').getroot()
+        dados.clear()
+
+        pontos = self.viewport.pontos
+        for ponto in pontos:
+            ponto_elem = ElementTree.SubElement(dados, 'ponto')
+            ponto_elem.set("x", str(ponto.x))
+            ponto_elem.set("y", str(ponto.y))
+            ponto.print()
+
+        retas = self.viewport.retas
+        for reta in retas:
+            reta_elem = ElementTree.SubElement(dados, "reta")
+            for ponto in [reta.a, reta.b]:
+                ponto_elem = ElementTree.SubElement(reta_elem, "ponto")
+                ponto_elem.set("x", str(ponto.x))
+                ponto_elem.set("y", str(ponto.x))
+            reta.print()
+
+        # ---- Transformar polígonos para viewport ----
+        poligonos = self.viewport.poligonos
+        for poligono in poligonos:
+            poligono_elem = ElementTree.SubElement(dados, "poligono")
+            for ponto in poligono.pontos:
+                ponto_elem = ElementTree.SubElement(poligono_elem, "ponto")
+                ponto_elem.set("x", str(ponto.x))
+                ponto_elem.set("y", str(ponto.x))
+            poligono.print()
+
+        # Salva o arquivo com a nova estrutura
+        xml = ElementTree.ElementTree(dados)
+        ElementTree.indent(xml, space="\t", level=0)
+        xml.write("docs/saida.xml", xml_declaration=True, encoding="utf-8")
