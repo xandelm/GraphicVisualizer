@@ -1,4 +1,4 @@
-# Trabalho Prático 1 - Computação Gráfica
+# Trabalho Prático - Computação Gráfica : Manipulação e Transformação de Objetos em Viewports
 ### Alexandre Mendes, Hugo Leonardo
 
 ## Instruções para execução
