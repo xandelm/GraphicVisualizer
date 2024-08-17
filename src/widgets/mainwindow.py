@@ -61,8 +61,8 @@ class MainWindow(QMainWindow):
         insert_line_action = insert_menu.addAction("Reta")
         insert_poligon_action = insert_menu.addAction("Poligono")
 
-        export_menu = menu_bar.addMenu("Exportar")
-        export_menu.triggered.connect(self.export)
+        export_menu_action = menu_bar.addMenu("Exportar").addAction("xml")
+        export_menu_action.triggered.connect(self.export)
 
         insert_point_action.triggered.connect(self.open_point_dialog)
         insert_line_action.triggered.connect(self.open_line_dialog)
